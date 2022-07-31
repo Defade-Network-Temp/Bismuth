@@ -1,5 +1,6 @@
 package fr.defade.bismuth.client;
 
+import fr.defade.bismuth.core.listeners.client.ClientPacketListener;
 import fr.defade.bismuth.core.utils.Utils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public class BismuthClient {
     private static final Logger LOGGER = LogManager.getLogger(BismuthClient.class);
@@ -26,7 +28,7 @@ public class BismuthClient {
         this.password = password;
     }
 
-    public void connect() throws InterruptedException {
+    public void connect(Supplier<ClientPacketListener> clientPacketListenerProvider) throws InterruptedException {
         CompletableFuture<Void> connectFuture = new CompletableFuture<>();
 
         clientBootstrapFuture = new Bootstrap()
