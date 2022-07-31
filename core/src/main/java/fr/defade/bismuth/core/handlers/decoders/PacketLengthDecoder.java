@@ -11,11 +11,16 @@ public class PacketLengthDecoder extends ByteToMessageDecoder {
     private BismuthByteBuf packetBuffer;
 
     @Override
+    public void handlerAdded(ChannelHandlerContext ctx) {
+        packetBuffer = new BismuthByteBuf(ctx.alloc().buffer());
+    }
+
+    @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {
         packetBuffer.writeBytes(byteBuf);
 
         while(packetBuffer.readableBytes() >= 4) {
-            int packetSize = packetBuffer.readInt();
+            short packetSize = packetBuffer.readShort();
             if(packetBuffer.readableBytes() >= packetSize) {
                 ByteBuf packetByteBuf = ctx.alloc().buffer(packetSize);
                 packetBuffer.readBytes(packetByteBuf);
