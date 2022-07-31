@@ -16,12 +16,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.util.function.Function;
 
 public class BismuthServer {
     private final static Logger LOGGER = LogManager.getLogger(BismuthServer.class);
 
+    private final KeyPair keyPair;
     private final String host;
     private final int port;
     private final byte[] passwordHash;
@@ -29,7 +31,8 @@ public class BismuthServer {
 
     private ChannelFuture serverBootstrapFuture;
 
-    public BismuthServer(String host, int port, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
+    public BismuthServer(String host, int port, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) throws NoSuchAlgorithmException {
+        this.keyPair = Utils.generateKeyPair();
         this.host = host;
         this.port = port;
         this.passwordHash = passwordHash;
@@ -49,7 +52,7 @@ public class BismuthServer {
 
                         socketChannel.pipeline().addAfter("encoder", "splitter", new PacketLengthDecoder());
                         socketChannel.pipeline().addAfter("splitter", "decoder", new PacketDecoder(PacketFlow.SERVERBOUND));
-                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ClientHandler(packetListenersProvider));
+                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ClientHandler(keyPair, passwordHash, packetListenersProvider));
                     }
                 })
                 .bind().sync();

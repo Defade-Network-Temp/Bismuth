@@ -9,6 +9,7 @@ import fr.defade.bismuth.core.utils.Utils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import java.security.KeyPair;
 import java.util.function.Function;
 
 public class ClientHandler extends SimpleChannelInboundHandler<Packet<? extends PacketListener>> {
@@ -17,9 +18,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet<? extends 
     private Channel clientChannel;
     private PacketListener serverPacketListener;
 
-    public ClientHandler(Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
+    public ClientHandler(KeyPair keyPair, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
         this.packetListenersProvider = packetListenersProvider;
-        this.serverPacketListener = new ServerLoginPacketListener();
+        this.serverPacketListener = new ServerLoginPacketListener(keyPair, passwordHash);
     }
 
     @Override

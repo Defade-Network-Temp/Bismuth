@@ -18,9 +18,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet<? extends 
     private final Supplier<ClientPacketListener> clientPacketListenerSupplier;
     private final PacketListener clientPacketListener;
 
-    public ServerHandler(Supplier<ClientPacketListener> clientPacketListenerSupplier) {
+    public ServerHandler(byte[] password, Supplier<ClientPacketListener> clientPacketListenerSupplier) {
         this.clientPacketListenerSupplier = clientPacketListenerSupplier;
-        this.clientPacketListener = new ClientLoginPacketListener();
+        this.clientPacketListener = new ClientLoginPacketListener(password);
     }
 
     @Override

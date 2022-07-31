@@ -2,7 +2,12 @@ package fr.defade.bismuth.core.protocol;
 
 import fr.defade.bismuth.core.listeners.PacketListener;
 import fr.defade.bismuth.core.listeners.client.ClientLoginPacketListener;
+import fr.defade.bismuth.core.listeners.server.ServerLoginPacketListener;
 import fr.defade.bismuth.core.protocol.packets.Packet;
+import fr.defade.bismuth.core.protocol.packets.login.client.ClientboundPasswordValidationPacket;
+import fr.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPacket;
+import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
+import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
 import fr.defade.bismuth.core.utils.BismuthByteBuf;
 import io.netty.util.AttributeKey;
 import java.util.HashMap;
@@ -11,7 +16,12 @@ import java.util.Map;
 public enum ConnectionProtocol {
     LOGIN(protocol()
             .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<ClientLoginPacketListener>()
-
+                    .addPacket(ClientboundRSAKeyPacket.class, ClientboundRSAKeyPacket::new)
+                    .addPacket(ClientboundPasswordValidationPacket.class, ClientboundPasswordValidationPacket::new)
+            )
+            .addFlow(PacketFlow.SERVERBOUND, new PacketSet<ServerLoginPacketListener>()
+                    .addPacket(ServerboundAESKeyPacket.class, ServerboundAESKeyPacket::new)
+                    .addPacket(ServerboundPasswordPacket.class, ServerboundPasswordPacket::new)
             )
     );
 

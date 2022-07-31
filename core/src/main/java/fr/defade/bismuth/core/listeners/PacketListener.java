@@ -24,6 +24,10 @@ public abstract class PacketListener {
         }
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
+
     public void setChannel(Channel channel) {
         this.channel = channel;
     }

@@ -45,7 +45,7 @@ public class BismuthClient {
 
                         socketChannel.pipeline().addAfter("encoder", "splitter", new PacketLengthDecoder());
                         socketChannel.pipeline().addAfter("splitter", "decoder", new PacketDecoder(PacketFlow.CLIENTBOUND));
-                        socketChannel.pipeline().addAfter("decoder", "server", new ServerHandler(clientPacketListenerProvider));
+                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ServerHandler(password, clientPacketListenerProvider));
                     }
                 })
                 .connect().sync();
