@@ -6,6 +6,7 @@ import fr.defade.bismuth.core.handlers.decoders.PacketLengthDecoder;
 import fr.defade.bismuth.core.handlers.encoders.PacketEncoder;
 import fr.defade.bismuth.core.handlers.encoders.PacketLengthEncoder;
 import fr.defade.bismuth.core.listeners.client.ClientPacketListener;
+import fr.defade.bismuth.core.protocol.ConnectionProtocol;
 import fr.defade.bismuth.core.protocol.PacketFlow;
 import fr.defade.bismuth.core.utils.Utils;
 import io.netty.bootstrap.Bootstrap;
@@ -33,6 +34,13 @@ public class BismuthClient {
     }
 
     public CompletableFuture<Boolean> connect(ClientPacketListener clientPacketListener) {
+        ConnectionProtocol connectionProtocol = ConnectionProtocol.getProtocolFromListener(clientPacketListener);
+        if(connectionProtocol == ConnectionProtocol.LOGIN) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("PacketListener implements login listener"));
+        } else if(connectionProtocol == null) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("PacketListener refers to no protocol"));
+        }
+
         ServerHandler serverHandler = new ServerHandler(password, clientPacketListener);
         clientBootstrapFuture = new Bootstrap()
                 .group(Utils.generateNioEventLoopGroup())

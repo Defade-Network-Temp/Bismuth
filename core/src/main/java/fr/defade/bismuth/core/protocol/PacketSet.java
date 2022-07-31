@@ -9,8 +9,13 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class PacketSet<T extends PacketListener> {
+    private final Class<T> packetListenerClass;
     private final Map<Integer, Function<BismuthByteBuf, Packet<T>>> idToDeserializer = new HashMap<>();
     private final Map<Class<? extends Packet<T>>, Integer> packetToId = new HashMap<>();
+
+    public PacketSet(Class<T> packetListenerClass) {
+        this.packetListenerClass = packetListenerClass;
+    }
 
     public PacketSet<T> addPacket(Class<? extends Packet<T>> packet, Function<BismuthByteBuf, Packet<T>> deserializer) {
         int id = packetToId.size() + 1;
@@ -30,5 +35,9 @@ public class PacketSet<T extends PacketListener> {
 
         Function<BismuthByteBuf, Packet<T>> deserializer = idToDeserializer.get(id);
         return deserializer != null ? deserializer.apply(byteBuf) : null;
+    }
+
+    public Class<T> getPacketListenerClass() {
+        return packetListenerClass;
     }
 }

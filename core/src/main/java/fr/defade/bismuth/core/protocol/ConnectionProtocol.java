@@ -2,12 +2,16 @@ package fr.defade.bismuth.core.protocol;
 
 import fr.defade.bismuth.core.listeners.PacketListener;
 import fr.defade.bismuth.core.listeners.client.ClientLoginPacketListener;
+import fr.defade.bismuth.core.listeners.client.YokuraClientPacketListener;
 import fr.defade.bismuth.core.listeners.server.ServerLoginPacketListener;
+import fr.defade.bismuth.core.listeners.server.YokuraServerPacketListener;
 import fr.defade.bismuth.core.protocol.packets.Packet;
 import fr.defade.bismuth.core.protocol.packets.login.client.ClientboundPasswordValidationPacket;
 import fr.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPacket;
 import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
+import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
+import fr.defade.bismuth.core.protocol.packets.yokura.server.ServerboundServerNamePacket;
 import fr.defade.bismuth.core.utils.BismuthByteBuf;
 import io.netty.util.AttributeKey;
 import java.util.HashMap;
@@ -15,13 +19,22 @@ import java.util.Map;
 
 public enum ConnectionProtocol {
     LOGIN(protocol()
-            .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<ClientLoginPacketListener>()
+            .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<>(ClientLoginPacketListener.class)
                     .addPacket(ClientboundRSAKeyPacket.class, ClientboundRSAKeyPacket::new)
                     .addPacket(ClientboundPasswordValidationPacket.class, ClientboundPasswordValidationPacket::new)
             )
-            .addFlow(PacketFlow.SERVERBOUND, new PacketSet<ServerLoginPacketListener>()
+            .addFlow(PacketFlow.SERVERBOUND, new PacketSet<>(ServerLoginPacketListener.class)
                     .addPacket(ServerboundAESKeyPacket.class, ServerboundAESKeyPacket::new)
                     .addPacket(ServerboundPasswordPacket.class, ServerboundPasswordPacket::new)
+                    .addPacket(ServerboundClientProtocolPacket.class, ServerboundClientProtocolPacket::new)
+            )
+    ),
+    YOKURA(protocol()
+            .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<>(YokuraClientPacketListener.class)
+
+            )
+            .addFlow(PacketFlow.SERVERBOUND, new PacketSet<>(YokuraServerPacketListener.class)
+                    .addPacket(ServerboundServerNamePacket.class, ServerboundServerNamePacket::new)
             )
     );
 
@@ -42,6 +55,19 @@ public enum ConnectionProtocol {
     public Packet<? extends PacketListener> createPacket(PacketFlow flow, int packetId, BismuthByteBuf byteBuf) {
         return packets.get(flow).createPacket(packetId, byteBuf);
     }
+
+    public static ConnectionProtocol getProtocolFromListener(PacketListener packetListener) {
+        for(ConnectionProtocol protocols : values()) {
+            for(PacketSet<?> packetSets : protocols.packets.values()) {
+                if(packetSets.getPacketListenerClass().isAssignableFrom(packetListener.getClass())) {
+                    return protocols;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private static ProtocolBuilder protocol() {
         return new ProtocolBuilder();
     }

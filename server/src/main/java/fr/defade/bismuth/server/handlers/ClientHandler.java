@@ -13,14 +13,16 @@ import java.security.KeyPair;
 import java.util.function.Function;
 
 public class ClientHandler extends SimpleChannelInboundHandler<Packet<? extends PacketListener>> {
-    private final Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider;
-
     private Channel clientChannel;
     private PacketListener serverPacketListener;
 
     public ClientHandler(KeyPair keyPair, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
-        this.packetListenersProvider = packetListenersProvider;
-        this.serverPacketListener = new ServerLoginPacketListener(keyPair, passwordHash);
+        this.serverPacketListener = new ServerLoginPacketListener((protocol) -> {
+            setProtocol(protocol);
+            this.serverPacketListener = packetListenersProvider.apply(protocol);
+            serverPacketListener.setChannel(clientChannel);
+            serverPacketListener.channelActive();
+        }, keyPair, passwordHash);
     }
 
     @Override

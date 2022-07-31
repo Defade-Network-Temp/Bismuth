@@ -5,6 +5,7 @@ import fr.defade.bismuth.core.listeners.client.ClientLoginPacketListener;
 import fr.defade.bismuth.core.listeners.client.ClientPacketListener;
 import fr.defade.bismuth.core.protocol.ConnectionProtocol;
 import fr.defade.bismuth.core.protocol.packets.Packet;
+import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import fr.defade.bismuth.core.utils.Utils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,6 +23,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet<? extends 
         this.clientPacketListener = new ClientLoginPacketListener(connectionFuture, password);
         connectionFuture.whenComplete((isValidated, throwable) -> {
             if(throwable == null && isValidated) {
+                ConnectionProtocol protocol = ConnectionProtocol.getProtocolFromListener(apiProvidedClientPacketListener);
+                clientPacketListener.sendPacket(new ServerboundClientProtocolPacket(protocol));
+                setProtocol(protocol);
+
                 this.clientPacketListener = apiProvidedClientPacketListener;
                 clientPacketListener.setChannel(serverChannel);
                 clientPacketListener.channelActive();

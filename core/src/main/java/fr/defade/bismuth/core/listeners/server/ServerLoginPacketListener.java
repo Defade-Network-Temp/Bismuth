@@ -3,9 +3,11 @@ package fr.defade.bismuth.core.listeners.server;
 import fr.defade.bismuth.core.handlers.decoders.CipherDecoder;
 import fr.defade.bismuth.core.handlers.encoders.CipherEncoder;
 import fr.defade.bismuth.core.listeners.PacketListener;
+import fr.defade.bismuth.core.protocol.ConnectionProtocol;
 import fr.defade.bismuth.core.protocol.packets.login.client.ClientboundPasswordValidationPacket;
 import fr.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPacket;
 import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
+import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import fr.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -18,12 +20,15 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 public class ServerLoginPacketListener extends PacketListener {
+    private final Consumer<ConnectionProtocol> connectionSuccessfulRunnable;
     private final KeyPair keyPair;
     private final byte[] passwordHash;
 
-    public ServerLoginPacketListener(KeyPair keyPair, byte[] passwordHash) {
+    public ServerLoginPacketListener(Consumer<ConnectionProtocol> connectionSuccessfulRunnable, KeyPair keyPair, byte[] passwordHash) {
+        this.connectionSuccessfulRunnable = connectionSuccessfulRunnable;
         this.keyPair = keyPair;
         this.passwordHash = passwordHash;
     }
@@ -62,5 +67,9 @@ public class ServerLoginPacketListener extends PacketListener {
         } catch (NoSuchAlgorithmException exception) {
             throw new RuntimeException(exception); // TODO
         }
+    }
+
+    public void handleClientProtocol(ServerboundClientProtocolPacket clientProtocolPacket) {
+        connectionSuccessfulRunnable.accept(clientProtocolPacket.getConnectionProtocol());
     }
 }
