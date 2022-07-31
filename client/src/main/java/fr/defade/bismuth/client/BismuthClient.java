@@ -15,7 +15,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.util.function.Supplier;
+import java.util.concurrent.CompletableFuture;
 
 public class BismuthClient {
     private static final Logger LOGGER = LogManager.getLogger(BismuthClient.class);
@@ -32,7 +32,8 @@ public class BismuthClient {
         this.password = password;
     }
 
-    public void connect(Supplier<ClientPacketListener> clientPacketListenerProvider) throws InterruptedException {
+    public CompletableFuture<Boolean> connect(ClientPacketListener clientPacketListener) {
+        ServerHandler serverHandler = new ServerHandler(password, clientPacketListener);
         clientBootstrapFuture = new Bootstrap()
                 .group(Utils.generateNioEventLoopGroup())
                 .channel(NioSocketChannel.class)
@@ -45,10 +46,12 @@ public class BismuthClient {
 
                         socketChannel.pipeline().addAfter("encoder", "splitter", new PacketLengthDecoder());
                         socketChannel.pipeline().addAfter("splitter", "decoder", new PacketDecoder(PacketFlow.CLIENTBOUND));
-                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ServerHandler(password, clientPacketListenerProvider));
+                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", serverHandler);
                     }
                 })
-                .connect().sync();
+                .connect();
+
+        return serverHandler.getConnectionFuture();
     }
 
     public void disconnect() {

@@ -15,12 +15,25 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.CompletableFuture;
 
 public class ClientLoginPacketListener extends PacketListener {
+    private final CompletableFuture<Boolean> connectionFuture;
     private final byte[] password;
 
-    public ClientLoginPacketListener(byte[] password) {
+    public ClientLoginPacketListener(CompletableFuture<Boolean> connectionFuture, byte[] password) {
+        this.connectionFuture = connectionFuture;
         this.password = password;
+    }
+
+    @Override
+    public void channelInactive() {
+        connectionFuture.complete(false);
+    }
+
+    @Override
+    public void exceptionCaught(Throwable throwable) {
+        connectionFuture.completeExceptionally(throwable);
     }
 
     public void handleRSAKey(ClientboundRSAKeyPacket rsaKeyPacket) {
@@ -44,6 +57,6 @@ public class ClientLoginPacketListener extends PacketListener {
     }
 
     public void handlePasswordValidation(ClientboundPasswordValidationPacket passwordValidationPacket) {
-
+        connectionFuture.complete(passwordValidationPacket.isPasswordValid());
     }
 }

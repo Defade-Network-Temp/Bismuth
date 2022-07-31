@@ -10,17 +10,23 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-import java.util.function.Supplier;
+import java.util.concurrent.CompletableFuture;
 
 public class ServerHandler extends SimpleChannelInboundHandler<Packet<? extends PacketListener>> {
+    private final CompletableFuture<Boolean> connectionFuture = new CompletableFuture<>();
+    private PacketListener clientPacketListener;
+
     private Channel serverChannel;
 
-    private final Supplier<ClientPacketListener> clientPacketListenerSupplier;
-    private final PacketListener clientPacketListener;
-
-    public ServerHandler(byte[] password, Supplier<ClientPacketListener> clientPacketListenerSupplier) {
-        this.clientPacketListenerSupplier = clientPacketListenerSupplier;
-        this.clientPacketListener = new ClientLoginPacketListener(password);
+    public ServerHandler(byte[] password, ClientPacketListener apiProvidedClientPacketListener) {
+        this.clientPacketListener = new ClientLoginPacketListener(connectionFuture, password);
+        connectionFuture.whenComplete((isValidated, throwable) -> {
+            if(throwable == null && isValidated) {
+                this.clientPacketListener = apiProvidedClientPacketListener;
+                clientPacketListener.setChannel(serverChannel);
+                clientPacketListener.channelActive();
+            }
+        });
     }
 
     @Override
@@ -48,5 +54,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet<? extends 
 
     public void setProtocol(ConnectionProtocol protocol) {
         serverChannel.attr(ConnectionProtocol.CONNECTION_PROTOCOL_ATTRIBUTE_KEY).set(protocol);
+    }
+
+    public CompletableFuture<Boolean> getConnectionFuture() {
+        return connectionFuture;
     }
 }
