@@ -1,6 +1,14 @@
 package fr.defade.bismuth.server;
 
+import fr.defade.bismuth.core.handlers.decoders.PacketDecoder;
+import fr.defade.bismuth.core.handlers.decoders.PacketLengthDecoder;
+import fr.defade.bismuth.core.handlers.encoders.PacketEncoder;
+import fr.defade.bismuth.core.handlers.encoders.PacketLengthEncoder;
+import fr.defade.bismuth.core.listeners.server.ServerPacketListener;
+import fr.defade.bismuth.core.protocol.ConnectionProtocol;
+import fr.defade.bismuth.core.protocol.PacketFlow;
 import fr.defade.bismuth.core.utils.Utils;
+import fr.defade.bismuth.server.handlers.ClientHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -8,8 +16,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
+
+import java.util.function.Function;
 
 public class BismuthServer {
     private final static Logger LOGGER = LogManager.getLogger(BismuthServer.class);
@@ -17,13 +25,15 @@ public class BismuthServer {
     private final String host;
     private final int port;
     private final byte[] passwordHash;
+    private final Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider;
 
     private ChannelFuture serverBootstrapFuture;
 
-    public BismuthServer(String host, int port, byte[] passwordHash) {
+    public BismuthServer(String host, int port, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
         this.host = host;
         this.port = port;
         this.passwordHash = passwordHash;
+        this.packetListenersProvider = packetListenersProvider;
     }
 
     public void bind() throws InterruptedException {
@@ -34,7 +44,12 @@ public class BismuthServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
+                        socketChannel.pipeline().addFirst("prepender", new PacketLengthEncoder());
+                        socketChannel.pipeline().addAfter("prepender", "encoder", new PacketEncoder(PacketFlow.CLIENTBOUND));
 
+                        socketChannel.pipeline().addAfter("encoder", "splitter", new PacketLengthDecoder());
+                        socketChannel.pipeline().addAfter("splitter", "decoder", new PacketDecoder(PacketFlow.SERVERBOUND));
+                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ClientHandler(packetListenersProvider));
                     }
                 })
                 .bind().sync();
