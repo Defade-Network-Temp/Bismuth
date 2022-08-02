@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "fr.defade.bismuth"
+group = "net.defade.bismuth"
 version = "1.0-SNAPSHOT"
 
 subprojects {
