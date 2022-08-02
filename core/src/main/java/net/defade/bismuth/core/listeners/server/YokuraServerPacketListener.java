@@ -1,7 +1,16 @@
 package net.defade.bismuth.core.listeners.server;
 
-import net.defade.bismuth.core.protocol.packets.yokura.server.ServerboundServerNamePacket;
+import net.defade.bismuth.core.utils.BismuthByteBuf;
 
 public abstract class YokuraServerPacketListener extends ServerPacketListener {
-    public abstract void handleServerName(ServerboundServerNamePacket serverNamePacket);
+    private String serverName;
+
+    @Override
+    public final void readClientInfos(BismuthByteBuf clientInfos) {
+        this.serverName = clientInfos.readUTF();
+    }
+
+    public String getServerName() {
+        return serverName;
+    }
 }

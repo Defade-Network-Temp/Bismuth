@@ -17,10 +17,11 @@ public class ClientHandler extends SimpleChannelInboundHandler<Packet<? extends 
     private PacketListener serverPacketListener;
 
     public ClientHandler(KeyPair keyPair, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
-        this.serverPacketListener = new ServerLoginPacketListener((protocol) -> {
+        this.serverPacketListener = new ServerLoginPacketListener((protocol, clientInfos) -> {
             setProtocol(protocol);
             this.serverPacketListener = packetListenersProvider.apply(protocol);
             serverPacketListener.setChannel(clientChannel);
+            ((ServerPacketListener) serverPacketListener).readClientInfos(clientInfos);
             serverPacketListener.channelActive();
         }, keyPair, passwordHash);
     }

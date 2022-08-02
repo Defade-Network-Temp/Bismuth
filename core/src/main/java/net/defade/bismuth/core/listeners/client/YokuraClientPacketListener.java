@@ -1,8 +1,8 @@
 package net.defade.bismuth.core.listeners.client;
 
-import net.defade.bismuth.core.protocol.packets.yokura.server.ServerboundServerNamePacket;
+import net.defade.bismuth.core.utils.BismuthByteBuf;
 
-public class YokuraClientPacketListener extends ClientPacketListener {
+public abstract class YokuraClientPacketListener extends ClientPacketListener {
     private final String serverName;
 
     public YokuraClientPacketListener(String serverName) {
@@ -10,7 +10,7 @@ public class YokuraClientPacketListener extends ClientPacketListener {
     }
 
     @Override
-    public void channelActive() {
-        sendPacket(new ServerboundServerNamePacket(serverName));
+    public final void writeClientInfos(BismuthByteBuf byteBuf) {
+        byteBuf.writeUTF(serverName);
     }
 }

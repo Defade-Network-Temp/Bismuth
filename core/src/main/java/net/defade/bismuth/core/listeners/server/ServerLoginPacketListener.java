@@ -9,6 +9,7 @@ import net.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPa
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
+import net.defade.bismuth.core.utils.BismuthByteBuf;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -20,14 +21,14 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class ServerLoginPacketListener extends PacketListener {
-    private final Consumer<ConnectionProtocol> connectionSuccessfulRunnable;
+    private final BiConsumer<ConnectionProtocol, BismuthByteBuf> connectionSuccessfulRunnable;
     private final KeyPair keyPair;
     private final byte[] passwordHash;
 
-    public ServerLoginPacketListener(Consumer<ConnectionProtocol> connectionSuccessfulRunnable, KeyPair keyPair, byte[] passwordHash) {
+    public ServerLoginPacketListener(BiConsumer<ConnectionProtocol, BismuthByteBuf> connectionSuccessfulRunnable, KeyPair keyPair, byte[] passwordHash) {
         this.connectionSuccessfulRunnable = connectionSuccessfulRunnable;
         this.keyPair = keyPair;
         this.passwordHash = passwordHash;
@@ -70,6 +71,6 @@ public class ServerLoginPacketListener extends PacketListener {
     }
 
     public void handleClientProtocol(ServerboundClientProtocolPacket clientProtocolPacket) {
-        connectionSuccessfulRunnable.accept(clientProtocolPacket.getConnectionProtocol());
+        connectionSuccessfulRunnable.accept(clientProtocolPacket.getConnectionProtocol(), clientProtocolPacket.getClientInfos());
     }
 }
