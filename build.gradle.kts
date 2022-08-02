@@ -13,6 +13,11 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
+    java {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
     configure<PublishingExtension> {
         publications.create<MavenPublication>("maven") {
             from(components["java"])
