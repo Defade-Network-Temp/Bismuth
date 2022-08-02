@@ -1,17 +1,30 @@
 plugins {
     id("java")
+    id("maven-publish")
 }
 
-group = "fr.defade"
+group = "fr.defade.bismuth"
 version = "1.0-SNAPSHOT"
 
 subprojects {
     apply(plugin = "java")
     apply(plugin = "maven-publish")
 
+    group = rootProject.group
+    version = rootProject.version
+
     configure<PublishingExtension> {
         publications.create<MavenPublication>("maven") {
             from(components["java"])
+        }
+    }
+
+    publishing {
+        repositories {
+            maven("https://repo.defade.net/defade") {
+                name = "defade"
+                credentials(PasswordCredentials::class)
+            }
         }
     }
 
