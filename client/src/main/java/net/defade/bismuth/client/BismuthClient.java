@@ -33,7 +33,7 @@ public class BismuthClient {
         this.password = password;
     }
 
-    public CompletableFuture<Boolean> connect(ClientPacketListener clientPacketListener) {
+    public CompletableFuture<Void> connect(ClientPacketListener clientPacketListener) {
         ConnectionProtocol connectionProtocol = ConnectionProtocol.getProtocolFromListener(clientPacketListener);
         if(connectionProtocol == ConnectionProtocol.LOGIN) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("PacketListener implements login listener"));

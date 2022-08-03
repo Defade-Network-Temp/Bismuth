@@ -16,15 +16,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import java.util.concurrent.CompletableFuture;
 
 public class ServerHandler extends SimpleChannelInboundHandler<Packet<? extends PacketListener>> {
-    private final CompletableFuture<Boolean> connectionFuture = new CompletableFuture<>();
+    private final CompletableFuture<Void> connectionFuture = new CompletableFuture<>();
     private PacketListener clientPacketListener;
 
     private Channel serverChannel;
 
     public ServerHandler(byte[] password, ClientPacketListener apiProvidedClientPacketListener) {
         this.clientPacketListener = new ClientLoginPacketListener(connectionFuture, password);
-        connectionFuture.whenComplete((isValidated, throwable) -> {
-            if(throwable == null && isValidated) {
+        connectionFuture.whenComplete((unused, throwable) -> {
+            if(throwable == null) {
                 ConnectionProtocol protocol = ConnectionProtocol.getProtocolFromListener(apiProvidedClientPacketListener);
                 BismuthByteBuf clientInfos = new BismuthByteBuf(Unpooled.buffer());
                 apiProvidedClientPacketListener.writeClientInfos(clientInfos);
@@ -65,7 +65,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet<? extends 
         serverChannel.attr(ConnectionProtocol.CONNECTION_PROTOCOL_ATTRIBUTE_KEY).set(protocol);
     }
 
-    public CompletableFuture<Boolean> getConnectionFuture() {
+    public CompletableFuture<Void> getConnectionFuture() {
         return connectionFuture;
     }
 }

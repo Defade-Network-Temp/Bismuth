@@ -1,5 +1,7 @@
 package net.defade.bismuth.core.listeners.client;
 
+import net.defade.bismuth.core.exceptions.DisconnectException;
+import net.defade.bismuth.core.exceptions.PasswordInvalidException;
 import net.defade.bismuth.core.handlers.decoders.CipherDecoder;
 import net.defade.bismuth.core.handlers.encoders.CipherEncoder;
 import net.defade.bismuth.core.listeners.PacketListener;
@@ -8,7 +10,6 @@ import net.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPa
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
 import net.defade.bismuth.core.utils.Utils;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -19,17 +20,17 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
 
 public class ClientLoginPacketListener extends PacketListener {
-    private final CompletableFuture<Boolean> connectionFuture;
+    private final CompletableFuture<Void> connectionFuture;
     private final byte[] password;
 
-    public ClientLoginPacketListener(CompletableFuture<Boolean> connectionFuture, byte[] password) {
+    public ClientLoginPacketListener(CompletableFuture<Void> connectionFuture, byte[] password) {
         this.connectionFuture = connectionFuture;
         this.password = password;
     }
 
     @Override
     public void channelInactive() {
-        connectionFuture.complete(false);
+        connectionFuture.completeExceptionally(new DisconnectException());
     }
 
     @Override
@@ -58,6 +59,10 @@ public class ClientLoginPacketListener extends PacketListener {
     }
 
     public void handlePasswordValidation(ClientboundPasswordValidationPacket passwordValidationPacket) {
-        connectionFuture.complete(passwordValidationPacket.isPasswordValid());
+        if(!passwordValidationPacket.isPasswordValid()) {
+            connectionFuture.completeExceptionally(new PasswordInvalidException());
+        } else {
+            connectionFuture.complete(null);
+        }
     }
 }
