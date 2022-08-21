@@ -12,6 +12,7 @@ import net.defade.bismuth.core.protocol.packets.login.client.ClientboundServerIn
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
+import net.defade.bismuth.core.protocol.packets.yokura.client.ClientboundForwardingKeyPacket;
 import net.defade.bismuth.core.utils.BismuthByteBuf;
 import io.netty.util.AttributeKey;
 
@@ -33,7 +34,7 @@ public enum ConnectionProtocol {
     ),
     YOKURA(protocol()
             .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<>(YokuraClientPacketListener.class)
-
+                    .addPacket(ClientboundForwardingKeyPacket.class, ClientboundForwardingKeyPacket::new)
             )
             .addFlow(PacketFlow.SERVERBOUND, new PacketSet<>(YokuraServerPacketListener.class)
 

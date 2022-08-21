@@ -1,5 +1,6 @@
 package net.defade.bismuth.core.listeners.client;
 
+import net.defade.bismuth.core.protocol.packets.yokura.client.ClientboundForwardingKeyPacket;
 import net.defade.bismuth.core.servers.GameType;
 import net.defade.bismuth.core.utils.BismuthByteBuf;
 
@@ -11,6 +12,8 @@ public abstract class YokuraClientPacketListener extends ClientPacketListener {
         this.gameType = gameType;
         this.serverId = serverId;
     }
+
+    public abstract void handleForwardingKey(ClientboundForwardingKeyPacket forwardingKeyPacket);
 
     @Override
     public final void writeClientInfos(BismuthByteBuf byteBuf) {
