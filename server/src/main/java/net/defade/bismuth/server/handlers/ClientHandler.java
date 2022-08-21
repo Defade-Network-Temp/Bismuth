@@ -2,28 +2,27 @@ package net.defade.bismuth.server.handlers;
 
 import net.defade.bismuth.core.listeners.PacketListener;
 import net.defade.bismuth.core.listeners.server.ServerLoginPacketListener;
-import net.defade.bismuth.core.listeners.server.ServerPacketListener;
 import net.defade.bismuth.core.protocol.ConnectionProtocol;
 import net.defade.bismuth.core.protocol.packets.Packet;
+import net.defade.bismuth.core.utils.ServerInfosProvider;
 import net.defade.bismuth.core.utils.Utils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.security.KeyPair;
-import java.util.function.Function;
 
 public class ClientHandler extends SimpleChannelInboundHandler<Packet<? extends PacketListener>> {
     private Channel clientChannel;
     private PacketListener serverPacketListener;
 
-    public ClientHandler(KeyPair keyPair, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) {
-        this.serverPacketListener = new ServerLoginPacketListener((protocol, clientInfos) -> {
-            setProtocol(protocol);
-            this.serverPacketListener = packetListenersProvider.apply(protocol);
+    public ClientHandler(KeyPair keyPair, byte[] passwordHash, ServerInfosProvider serverInfosProvider) {
+        this.serverPacketListener = new ServerLoginPacketListener((packetListener) -> {
+            this.serverPacketListener = packetListener;
             serverPacketListener.setChannel(clientChannel);
-            ((ServerPacketListener) serverPacketListener).readClientInfos(clientInfos);
+
+            setProtocol(ConnectionProtocol.getProtocolFromListener(packetListener));
             serverPacketListener.channelActive();
-        }, keyPair, passwordHash);
+        }, keyPair, passwordHash, serverInfosProvider);
     }
 
     @Override

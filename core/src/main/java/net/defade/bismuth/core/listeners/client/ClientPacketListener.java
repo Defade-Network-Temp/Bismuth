@@ -5,4 +5,6 @@ import net.defade.bismuth.core.utils.BismuthByteBuf;
 
 public abstract class ClientPacketListener extends PacketListener {
     public void writeClientInfos(BismuthByteBuf byteBuf) { }
+
+    public void readServerInfos(BismuthByteBuf byteBuf) { }
 }

@@ -4,9 +4,8 @@ import net.defade.bismuth.core.handlers.decoders.PacketDecoder;
 import net.defade.bismuth.core.handlers.decoders.PacketLengthDecoder;
 import net.defade.bismuth.core.handlers.encoders.PacketEncoder;
 import net.defade.bismuth.core.handlers.encoders.PacketLengthEncoder;
-import net.defade.bismuth.core.listeners.server.ServerPacketListener;
-import net.defade.bismuth.core.protocol.ConnectionProtocol;
 import net.defade.bismuth.core.protocol.PacketFlow;
+import net.defade.bismuth.core.utils.ServerInfosProvider;
 import net.defade.bismuth.core.utils.Utils;
 import net.defade.bismuth.server.handlers.ClientHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -18,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.util.function.Function;
 
 public class BismuthServer {
     private final static Logger LOGGER = LogManager.getLogger(BismuthServer.class);
@@ -27,16 +25,16 @@ public class BismuthServer {
     private final String host;
     private final int port;
     private final byte[] passwordHash;
-    private final Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider;
+    private final ServerInfosProvider serverInfosProvider;
 
     private ChannelFuture serverBootstrapFuture;
 
-    public BismuthServer(String host, int port, byte[] passwordHash, Function<ConnectionProtocol, ServerPacketListener> packetListenersProvider) throws NoSuchAlgorithmException {
+    public BismuthServer(String host, int port, byte[] passwordHash, ServerInfosProvider serverInfosProvider) throws NoSuchAlgorithmException {
         this.keyPair = Utils.generateKeyPair();
         this.host = host;
         this.port = port;
         this.passwordHash = passwordHash;
-        this.packetListenersProvider = packetListenersProvider;
+        this.serverInfosProvider = serverInfosProvider;
     }
 
     public void bind() throws InterruptedException {
@@ -52,7 +50,7 @@ public class BismuthServer {
 
                         socketChannel.pipeline().addAfter("encoder", "splitter", new PacketLengthDecoder());
                         socketChannel.pipeline().addAfter("splitter", "decoder", new PacketDecoder(PacketFlow.SERVERBOUND));
-                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ClientHandler(keyPair, passwordHash, packetListenersProvider));
+                        socketChannel.pipeline().addAfter("decoder", "ClientHandler", new ClientHandler(keyPair, passwordHash, serverInfosProvider));
                     }
                 })
                 .bind().sync();

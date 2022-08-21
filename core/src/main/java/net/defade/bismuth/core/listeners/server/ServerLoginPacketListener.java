@@ -3,13 +3,14 @@ package net.defade.bismuth.core.listeners.server;
 import net.defade.bismuth.core.handlers.decoders.CipherDecoder;
 import net.defade.bismuth.core.handlers.encoders.CipherEncoder;
 import net.defade.bismuth.core.listeners.PacketListener;
-import net.defade.bismuth.core.protocol.ConnectionProtocol;
 import net.defade.bismuth.core.protocol.packets.login.client.ClientboundPasswordValidationPacket;
 import net.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPacket;
+import net.defade.bismuth.core.protocol.packets.login.client.ClientboundServerInfosPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
 import net.defade.bismuth.core.utils.BismuthByteBuf;
+import net.defade.bismuth.core.utils.ServerInfosProvider;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -21,17 +22,20 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ServerLoginPacketListener extends PacketListener {
-    private final BiConsumer<ConnectionProtocol, BismuthByteBuf> connectionSuccessfulRunnable;
+    private final Consumer<ServerPacketListener> connectionSuccessfulRunnable;
     private final KeyPair keyPair;
     private final byte[] passwordHash;
+    private final ServerInfosProvider serverInfosProvider;
 
-    public ServerLoginPacketListener(BiConsumer<ConnectionProtocol, BismuthByteBuf> connectionSuccessfulRunnable, KeyPair keyPair, byte[] passwordHash) {
+    public ServerLoginPacketListener(Consumer<ServerPacketListener> connectionSuccessfulRunnable, KeyPair keyPair,
+                                     byte[] passwordHash, ServerInfosProvider serverInfosProvider) {
         this.connectionSuccessfulRunnable = connectionSuccessfulRunnable;
         this.keyPair = keyPair;
         this.passwordHash = passwordHash;
+        this.serverInfosProvider = serverInfosProvider;
     }
 
     @Override
@@ -71,6 +75,13 @@ public class ServerLoginPacketListener extends PacketListener {
     }
 
     public void handleClientProtocol(ServerboundClientProtocolPacket clientProtocolPacket) {
-        connectionSuccessfulRunnable.accept(clientProtocolPacket.getConnectionProtocol(), clientProtocolPacket.getClientInfos());
+        ServerPacketListener serverPacketListener = serverInfosProvider.getPacketListenerFromProtocol(clientProtocolPacket.getConnectionProtocol());
+
+        serverPacketListener.readClientInfos(clientProtocolPacket.getClientInfos());
+        BismuthByteBuf byteBuf = new BismuthByteBuf(getChannel().alloc().buffer());
+        serverPacketListener.writeServerInfos(serverInfosProvider, byteBuf);
+        sendPacket(new ClientboundServerInfosPacket(byteBuf));
+
+        connectionSuccessfulRunnable.accept(serverPacketListener);
     }
 }

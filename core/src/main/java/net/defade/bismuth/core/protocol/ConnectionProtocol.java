@@ -8,6 +8,7 @@ import net.defade.bismuth.core.listeners.server.YokuraServerPacketListener;
 import net.defade.bismuth.core.protocol.packets.Packet;
 import net.defade.bismuth.core.protocol.packets.login.client.ClientboundPasswordValidationPacket;
 import net.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPacket;
+import net.defade.bismuth.core.protocol.packets.login.client.ClientboundServerInfosPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
@@ -22,6 +23,7 @@ public enum ConnectionProtocol {
             .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<>(ClientLoginPacketListener.class)
                     .addPacket(ClientboundRSAKeyPacket.class, ClientboundRSAKeyPacket::new)
                     .addPacket(ClientboundPasswordValidationPacket.class, ClientboundPasswordValidationPacket::new)
+                    .addPacket(ClientboundServerInfosPacket.class, ClientboundServerInfosPacket::new)
             )
             .addFlow(PacketFlow.SERVERBOUND, new PacketSet<>(ServerLoginPacketListener.class)
                     .addPacket(ServerboundAESKeyPacket.class, ServerboundAESKeyPacket::new)

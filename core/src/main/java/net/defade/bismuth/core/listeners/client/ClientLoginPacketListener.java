@@ -1,14 +1,19 @@
 package net.defade.bismuth.core.listeners.client;
 
+import io.netty.buffer.Unpooled;
 import net.defade.bismuth.core.exceptions.DisconnectException;
 import net.defade.bismuth.core.exceptions.PasswordInvalidException;
 import net.defade.bismuth.core.handlers.decoders.CipherDecoder;
 import net.defade.bismuth.core.handlers.encoders.CipherEncoder;
 import net.defade.bismuth.core.listeners.PacketListener;
+import net.defade.bismuth.core.protocol.ConnectionProtocol;
 import net.defade.bismuth.core.protocol.packets.login.client.ClientboundPasswordValidationPacket;
 import net.defade.bismuth.core.protocol.packets.login.client.ClientboundRSAKeyPacket;
+import net.defade.bismuth.core.protocol.packets.login.client.ClientboundServerInfosPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
+import net.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
+import net.defade.bismuth.core.utils.BismuthByteBuf;
 import net.defade.bismuth.core.utils.Utils;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -22,10 +27,12 @@ import java.util.concurrent.CompletableFuture;
 public class ClientLoginPacketListener extends PacketListener {
     private final CompletableFuture<Void> connectionFuture;
     private final byte[] password;
+    private final ClientPacketListener clientPacketListener;
 
-    public ClientLoginPacketListener(CompletableFuture<Void> connectionFuture, byte[] password) {
+    public ClientLoginPacketListener(CompletableFuture<Void> connectionFuture, byte[] password, ClientPacketListener clientPacketListener) {
         this.connectionFuture = connectionFuture;
         this.password = password;
+        this.clientPacketListener = clientPacketListener;
     }
 
     @Override
@@ -62,7 +69,15 @@ public class ClientLoginPacketListener extends PacketListener {
         if(!passwordValidationPacket.isPasswordValid()) {
             connectionFuture.completeExceptionally(new PasswordInvalidException());
         } else {
-            connectionFuture.complete(null);
+            BismuthByteBuf clientInfos = new BismuthByteBuf(Unpooled.buffer());
+            clientPacketListener.writeClientInfos(clientInfos);
+            sendPacket(new ServerboundClientProtocolPacket(ConnectionProtocol.getProtocolFromListener(clientPacketListener), clientInfos));
         }
+    }
+
+    public void handleServerInfos(ClientboundServerInfosPacket serverInfosPacket) {
+        clientPacketListener.readServerInfos(serverInfosPacket.getServerInfos());
+
+        connectionFuture.complete(null);
     }
 }
