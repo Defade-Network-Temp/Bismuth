@@ -12,10 +12,10 @@ import net.defade.bismuth.core.protocol.packets.login.client.ClientboundServerIn
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundAESKeyPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundClientProtocolPacket;
 import net.defade.bismuth.core.protocol.packets.login.server.ServerboundPasswordPacket;
-import net.defade.bismuth.core.protocol.packets.yokura.client.ClientboundForwardingKeyPacket;
+import net.defade.bismuth.core.protocol.packets.yokura.client.*;
+import net.defade.bismuth.core.protocol.packets.yokura.server.ServerboundUpdateServerStatusPacket;
 import net.defade.bismuth.core.utils.BismuthByteBuf;
 import io.netty.util.AttributeKey;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,9 +35,14 @@ public enum ConnectionProtocol {
     YOKURA(protocol()
             .addFlow(PacketFlow.CLIENTBOUND, new PacketSet<>(YokuraClientPacketListener.class)
                     .addPacket(ClientboundForwardingKeyPacket.class, ClientboundForwardingKeyPacket::new)
+                    .addPacket(ClientboundServersListPacket.class, ClientboundServersListPacket::new)
+                    .addPacket(ClientboundCreatedServerPacket.class, ClientboundCreatedServerPacket::new)
+                    .addPacket(ClientboundDeletedServerPacket.class, ClientboundDeletedServerPacket::new)
+                    .addPacket(ClientboundUpdateServerStatusPacket.class, ClientboundUpdateServerStatusPacket::new)
+                    .addPacket(ClientboundStopServerPacket.class, ClientboundStopServerPacket::new)
             )
             .addFlow(PacketFlow.SERVERBOUND, new PacketSet<>(YokuraServerPacketListener.class)
-
+                    .addPacket(ServerboundUpdateServerStatusPacket.class, ServerboundUpdateServerStatusPacket::new)
             )
     );
 

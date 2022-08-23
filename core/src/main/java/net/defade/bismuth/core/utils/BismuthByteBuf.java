@@ -3,9 +3,9 @@ package net.defade.bismuth.core.utils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.ByteProcessor;
-import net.defade.bismuth.core.servers.Game;
-import net.defade.bismuth.core.servers.GamePlayStatus;
 import net.defade.bismuth.core.servers.GameType;
+import net.defade.bismuth.core.servers.Server;
+import net.defade.bismuth.core.servers.ServerStatus;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,6 +54,21 @@ public class BismuthByteBuf {
         return this;
     }
 
+    public Server readServer() {
+        return new Server(
+                readUTF(),
+                readGameType(),
+                ServerStatus.valueOf(readUTF())
+        );
+    }
+
+    public BismuthByteBuf writeServer(Server server) {
+        writeUTF(server.getServerId());
+        writeGameType(server.getGameType());
+        writeUTF(server.getServerStatus().toString());
+
+        return this;
+    }
 
     public int capacity() {
         return this.source.capacity();
