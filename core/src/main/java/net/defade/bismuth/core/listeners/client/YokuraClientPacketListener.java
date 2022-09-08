@@ -8,13 +8,16 @@ import net.defade.bismuth.core.protocol.packets.yokura.client.ClientboundStopSer
 import net.defade.bismuth.core.protocol.packets.yokura.client.ClientboundUpdateServerStatusPacket;
 import net.defade.bismuth.core.servers.Server;
 import net.defade.bismuth.core.utils.BismuthByteBuf;
+import net.defade.bismuth.core.utils.NetworkInfos;
 
 public abstract class YokuraClientPacketListener extends ClientPacketListener {
-    private final String serverId;
-    private Server server;
+    private final Server server;
+    private final int port;
+    private NetworkInfos networkInfos;
 
-    public YokuraClientPacketListener(String serverId) {
-        this.serverId = serverId;
+    public YokuraClientPacketListener(Server server, int port) {
+        this.server = server;
+        this.port = port;
     }
 
     public abstract void handleForwardingKey(ClientboundForwardingKeyPacket forwardingKeyPacket);
@@ -31,15 +34,20 @@ public abstract class YokuraClientPacketListener extends ClientPacketListener {
 
     @Override
     public final void writeClientInfos(BismuthByteBuf byteBuf) {
-        byteBuf.writeUTF(serverId);
+        byteBuf.writeServer(server);
+        byteBuf.writeInt(port);
     }
 
     @Override
     public final void readServerInfos(BismuthByteBuf byteBuf) {
-        this.server = byteBuf.readServer();
+        this.networkInfos = new NetworkInfos(byteBuf);
     }
 
     public Server getServer() {
         return server;
+    }
+
+    public NetworkInfos getNetworkInfos() {
+        return networkInfos;
     }
 }

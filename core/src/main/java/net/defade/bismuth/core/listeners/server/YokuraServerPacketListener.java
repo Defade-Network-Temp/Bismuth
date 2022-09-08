@@ -6,8 +6,8 @@ import net.defade.bismuth.core.utils.BismuthByteBuf;
 import net.defade.bismuth.core.utils.ServerInfosProvider;
 
 public abstract class YokuraServerPacketListener extends ServerPacketListener {
-    private String serverId;
     private Server server;
+    private int port;
 
     public void updateServerStatus(ServerboundUpdateServerStatusPacket updateServerStatusPacket) {
         server.setServerStatus(updateServerStatusPacket.getServerStatus());
@@ -15,16 +15,20 @@ public abstract class YokuraServerPacketListener extends ServerPacketListener {
 
     @Override
     public final void readClientInfos(BismuthByteBuf clientInfos) {
-        this.serverId = clientInfos.readUTF();
+        this.server = clientInfos.readServer();
+        this.port = clientInfos.readInt();
     }
 
     @Override
     public final void writeServerInfos(ServerInfosProvider serverInfosProvider, BismuthByteBuf serverInfos) {
-        this.server = serverInfosProvider.getServerFromServerId(serverId);
-        serverInfos.writeServer(server);
+        serverInfosProvider.getNetworkInfos().write(serverInfos);
     }
 
     public Server getServer() {
         return server;
+    }
+
+    public int getPort() {
+        return port;
     }
 }
