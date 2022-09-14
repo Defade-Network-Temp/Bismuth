@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "net.defade.bismuth"
-version = "1.0-SNAPSHOT"
+version = "1.0.1"
 
 subprojects {
     apply(plugin = "java")
@@ -16,6 +16,8 @@ subprojects {
     java {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        withSourcesJar()
+        withJavadocJar()
     }
 
     configure<PublishingExtension> {
