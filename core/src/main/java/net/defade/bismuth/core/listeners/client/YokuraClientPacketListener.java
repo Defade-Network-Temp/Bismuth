@@ -10,18 +10,19 @@ import net.defade.bismuth.core.servers.GameType;
 import net.defade.bismuth.core.servers.Server;
 import net.defade.bismuth.core.utils.BismuthByteBuf;
 import net.defade.bismuth.core.utils.NetworkInfos;
+import java.net.InetSocketAddress;
 
 public abstract class YokuraClientPacketListener extends ClientPacketListener {
     private final GameType gameType;
     private final String velocityIdTracker;
-    private final int port;
+    private final InetSocketAddress address;
     private Server server;
     private NetworkInfos networkInfos;
 
-    public YokuraClientPacketListener(GameType gameType, String velocityIdTracker, int port) {
+    public YokuraClientPacketListener(GameType gameType, String velocityIdTracker, InetSocketAddress address) {
         this.gameType = gameType;
         this.velocityIdTracker = velocityIdTracker;
-        this.port = port;
+        this.address = address;
     }
 
     public abstract void handleForwardingKey(ClientboundForwardingKeyPacket forwardingKeyPacket);
@@ -41,7 +42,8 @@ public abstract class YokuraClientPacketListener extends ClientPacketListener {
         byteBuf.writeGameType(gameType);
         byteBuf.writeBoolean(velocityIdTracker != null);
         if(velocityIdTracker != null) byteBuf.writeUTF(velocityIdTracker);
-        byteBuf.writeInt(port);
+        byteBuf.writeUTF(address.getHostString());
+        byteBuf.writeInt(address.getPort());
     }
 
     @Override

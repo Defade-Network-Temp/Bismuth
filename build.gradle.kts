@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "net.defade.bismuth"
-version = "1.0.1"
+version = "1.1.0"
 
 subprojects {
     apply(plugin = "java")

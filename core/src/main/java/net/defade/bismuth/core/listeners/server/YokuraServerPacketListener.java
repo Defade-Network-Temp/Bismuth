@@ -1,5 +1,6 @@
 package net.defade.bismuth.core.listeners.server;
 
+import java.net.InetSocketAddress;
 import net.defade.bismuth.core.protocol.packets.yokura.server.ServerboundUpdateServerStatusPacket;
 import net.defade.bismuth.core.servers.GameType;
 import net.defade.bismuth.core.servers.Server;
@@ -9,7 +10,7 @@ import net.defade.bismuth.core.utils.ServerInfosProvider;
 public abstract class YokuraServerPacketListener extends ServerPacketListener {
     private GameType gameType;
     private String velocityIdTracker = null;
-    private int port;
+    private InetSocketAddress address;
     private Server server;
 
     public void updateServerStatus(ServerboundUpdateServerStatusPacket updateServerStatusPacket) {
@@ -20,7 +21,7 @@ public abstract class YokuraServerPacketListener extends ServerPacketListener {
     public final void readClientInfos(BismuthByteBuf clientInfos) {
         this.gameType = clientInfos.readGameType();
         if(clientInfos.readBoolean()) this.velocityIdTracker = clientInfos.readUTF();
-        this.port = clientInfos.readInt();
+        this.address = new InetSocketAddress(clientInfos.readUTF(), clientInfos.readInt());
     }
 
     @Override
@@ -34,7 +35,7 @@ public abstract class YokuraServerPacketListener extends ServerPacketListener {
         return server;
     }
 
-    public int getPort() {
-        return port;
+    public InetSocketAddress getAddress() {
+        return address;
     }
 }
